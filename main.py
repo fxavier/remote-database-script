@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import mysql.connector
 import psycopg2
 from psycopg2 import sql
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Dict, Any, Tuple, Union
 
 
@@ -49,6 +49,8 @@ def create_config() -> Tuple[Dict[str, Union[str, int, bool, None]],
 
 def fetch_and_insert_elegiveis_cv(mysql_cursor, pg_cursor):
     """Fetch data from elegiveis_cv and insert into PostgreSQL."""
+
+   # data_proxima = date.today() + timedelta(days=2)
     # Execute MySQL query
     query = "SELECT * FROM elegiveis_cv"
     mysql_cursor.execute(query)
@@ -68,16 +70,17 @@ def fetch_and_insert_elegiveis_cv(mysql_cursor, pg_cursor):
         phone_number = row[8]
         community = row[12]
         created_at = date.today()
+        synced = False
 
         pg_cursor.execute(sql.SQL("""
-            INSERT INTO core_elegiveiscv (province,district,
+            INSERT INTO core_patienteligiblevlcollection (province,district,
             community,health_facility,
             patient_name, patient_identifier, age,
-            phone_number, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            phone_number, created_at, synced)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, community, health_facility,
                patient_name, patient_identifier, age,
-               phone_number, created_at))
+               phone_number, created_at, synced))
 
 
 def fetch_and_insert_carga_viral_alta(mysql_cursor, pg_cursor):
@@ -101,25 +104,28 @@ def fetch_and_insert_carga_viral_alta(mysql_cursor, pg_cursor):
         age = row[6]
         phone_number = row[19]
         created_at = date.today()
+        synced = False
 
         pg_cursor.execute(sql.SQL("""
-            INSERT INTO core_pacientescargaalta (
+            INSERT INTO core_viralloadtestresult (
                 province, district, health_facility,
                 patient_name, patient_identifier,
-                age, phone_number, created_at
+                age, phone_number, created_at, synced
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, health_facility,
                patient_name, patient_identifier,
-               age, phone_number, created_at))
+               age, phone_number, created_at, synced))
 
 
 def fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor):
     """Fetch data from marcados_para_o_levantamento
     and insert into PostgreSQL."""
+
+    next_appointment_date = date.today() + timedelta(days=4)
     # Execute MySQL query
-    query = "SELECT * FROM marcados_levantamento"
-    mysql_cursor.execute(query)
+    query = "SELECT * FROM marcados_levantamento WHERE next_dispensing_date = %s"
+    mysql_cursor.execute(query, (next_appointment_date,))
 
     # Fetch all rows
     rows = mysql_cursor.fetchall()
@@ -144,21 +150,22 @@ def fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor):
         breastfeeding = row[16]
         tb = row[17]
         created_at = date.today()
+        synced = False
 
         pg_cursor.execute(sql.SQL("""
-            INSERT INTO core_marcadoslevantamento (
+            INSERT INTO core_visit (
                 province, district, health_facility,
                 patient_name, patient_identifier,
                 age, phone_number, appointment_date,
                 next_appointment_date, gender, community,
-                pregnant, breastfeeding, tb, created_at
+                pregnant, breastfeeding, tb, created_at, synced
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, health_facility,
                patient_name, patient_identifier,
                age, phone_number, appointment_date,
                next_appointment_date, gender, community,
-               pregnant, breastfeeding, tb, created_at))
+               pregnant, breastfeeding, tb, created_at, synced))
 
 
 def main():
