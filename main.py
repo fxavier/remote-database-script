@@ -133,7 +133,7 @@ def fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor):
     # Insert fetched data into PostgreSQL
     for row in rows:
         province = "Sofala"
-        district = row[1]
+        district = row[4]
         health_facility = row[1]
         # patient_id = row[0]
         patient_identifier = row[10]
