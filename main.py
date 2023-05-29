@@ -50,7 +50,7 @@ def create_config() -> Tuple[Dict[str, Union[str, int, bool, None]],
 def fetch_and_insert_elegiveis_cv(mysql_cursor, pg_cursor):
     """Fetch data from elegiveis_cv and insert into PostgreSQL."""
 
-   # data_proxima = date.today() + timedelta(days=2)
+    # data_proxima = date.today() + timedelta(days=2)
     # Execute MySQL query
     query = "SELECT * FROM elegiveis_cv"
     mysql_cursor.execute(query)
@@ -70,17 +70,17 @@ def fetch_and_insert_elegiveis_cv(mysql_cursor, pg_cursor):
         phone_number = row[8]
         community = row[12]
         created_at = date.today()
-        synced = False
+        sent = False
 
         pg_cursor.execute(sql.SQL("""
             INSERT INTO core_patienteligiblevlcollection (province,district,
             community,health_facility,
             patient_name, patient_identifier, age,
-            phone_number, created_at, synced)
+            phone_number, created_at, sent)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, community, health_facility,
                patient_name, patient_identifier, age,
-               phone_number, created_at, synced))
+               phone_number, created_at, sent))
 
 
 def fetch_and_insert_carga_viral_alta(mysql_cursor, pg_cursor):
@@ -104,18 +104,18 @@ def fetch_and_insert_carga_viral_alta(mysql_cursor, pg_cursor):
         age = row[6]
         phone_number = row[19]
         created_at = date.today()
-        synced = False
+        sent = False
 
         pg_cursor.execute(sql.SQL("""
             INSERT INTO core_viralloadtestresult (
                 province, district, health_facility,
                 patient_name, patient_identifier,
-                age, phone_number, created_at, synced
+                age, phone_number, created_at, sent
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, health_facility,
                patient_name, patient_identifier,
-               age, phone_number, created_at, synced))
+               age, phone_number, created_at, sent))
 
 
 def fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor):
@@ -150,7 +150,7 @@ def fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor):
         breastfeeding = row[16]
         tb = row[17]
         created_at = date.today()
-        synced = False
+        sent = False
 
         pg_cursor.execute(sql.SQL("""
             INSERT INTO core_visit (
@@ -158,14 +158,14 @@ def fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor):
                 patient_name, patient_identifier,
                 age, phone_number, appointment_date,
                 next_appointment_date, gender, community,
-                pregnant, breastfeeding, tb, created_at, synced
+                pregnant, breastfeeding, tb, created_at, sent
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, health_facility,
                patient_name, patient_identifier,
                age, phone_number, appointment_date,
                next_appointment_date, gender, community,
-               pregnant, breastfeeding, tb, created_at, synced))
+               pregnant, breastfeeding, tb, created_at, sent))
 
 
 def main():
