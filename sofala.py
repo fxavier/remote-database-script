@@ -11,8 +11,8 @@ from typing import Dict, Any, Tuple, Union
 load_dotenv()
 
 
-def create_config(province: str) -> Tuple[Dict[str, Union[str, int, bool, None]],
-                                          Dict[str, Union[str, int, None]]]:
+def create_config() -> Tuple[Dict[str, Union[str, int, bool, None]],
+                             Dict[str, Union[str, int, None]]]:
     """Create MySQL and PostgreSQL configuration."""
     # MySQL SSL configuration
     ssl_config = {
@@ -25,8 +25,8 @@ def create_config(province: str) -> Tuple[Dict[str, Union[str, int, bool, None]]
     mysql_config = {
         'user': os.getenv('MYSQL_USER'),
         'password': os.getenv('MYSQL_PASSWORD'),
-        'host': os.getenv(f'{province.upper()}_MYSQL_HOST'),
-        'port': int(os.getenv(f'{province.upper()}_MYSQL_PORT', 0)),
+        'host': os.getenv('SOFALA_MYSQL_HOST'),
+        'port': int(os.getenv('SOFALA_MYSQL_PORT', 0)),
         'database': os.getenv('MYSQL_DATABASE'),
         'ssl_ca': ssl_config['ca'],
         'ssl_cert': ssl_config['cert'],
@@ -47,8 +47,11 @@ def create_config(province: str) -> Tuple[Dict[str, Union[str, int, bool, None]]
     return mysql_config, pg_config
 
 
-def fetch_and_insert_elegiveis_cv(province: str, mysql_cursor, pg_cursor):
+def fetch_and_insert_elegiveis_cv(mysql_cursor, pg_cursor):
     """Fetch data from elegiveis_cv and insert into PostgreSQL."""
+
+    # data_proxima = date.today() + timedelta(days=2)
+    # Execute MySQL query
     query = "SELECT * FROM elegiveis_cv"
     mysql_cursor.execute(query)
 
@@ -57,7 +60,7 @@ def fetch_and_insert_elegiveis_cv(province: str, mysql_cursor, pg_cursor):
 
     # Insert fetched data into PostgreSQL
     for row in rows:
-        province = province
+        province = "Sofala"
         health_facility = row[0]
         district = row[1]
         # patient_id = row[2]
@@ -80,7 +83,7 @@ def fetch_and_insert_elegiveis_cv(province: str, mysql_cursor, pg_cursor):
                phone_number, created_at, sent))
 
 
-def fetch_and_insert_carga_viral_alta(province: str, mysql_cursor, pg_cursor):
+def fetch_and_insert_carga_viral_alta(mysql_cursor, pg_cursor):
     """Fetch data from carga viral acima de 1000 and insert into PostgreSQL."""
     # Execute MySQL query
     query = "SELECT * FROM cv_acima_de_1000"
@@ -91,7 +94,7 @@ def fetch_and_insert_carga_viral_alta(province: str, mysql_cursor, pg_cursor):
 
     # Insert fetched data into PostgreSQL
     for row in rows:
-        province = province
+        province = "Sofala"
         district = row[1]
         health_facility = row[0]
         #   patient_id = row[0]
@@ -115,14 +118,13 @@ def fetch_and_insert_carga_viral_alta(province: str, mysql_cursor, pg_cursor):
                age, phone_number, created_at, sent))
 
 
-def fetch_and_insert_marcados_levantamento(province: str,
-                                           mysql_cursor, pg_cursor):
-    """Fetch data from marcados_para_o_levantamento 
+def fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor):
+    """Fetch data from marcados_para_o_levantamento
     and insert into PostgreSQL."""
 
     next_appointment_date = date.today() + timedelta(days=4)
-    query = "SELECT * FROM marcados_levantamento \
-        WHERE next_dispensing_date = %s"
+    # Execute MySQL query
+    query = "SELECT * FROM marcados_levantamento WHERE next_dispensing_date = %s"
     mysql_cursor.execute(query, (next_appointment_date,))
 
     # Fetch all rows
@@ -130,7 +132,7 @@ def fetch_and_insert_marcados_levantamento(province: str,
 
     # Insert fetched data into PostgreSQL
     for row in rows:
-        province = province
+        province = "Sofala"
         district = row[4]
         health_facility = row[1]
         # patient_id = row[0]
@@ -166,9 +168,9 @@ def fetch_and_insert_marcados_levantamento(province: str,
                pregnant, breastfeeding, tb, created_at, sent))
 
 
-def main(province: str):
+def main():
     """Main function to fetch data from MySQL and insert into PostgreSQL."""
-    mysql_config, pg_config = create_config(province)
+    mysql_config, pg_config = create_config()
 
     try:
         with mysql.connector.connect(**mysql_config) as mysql_cnx, \
@@ -176,11 +178,9 @@ def main(province: str):
                 psycopg2.connect(**pg_config) as pg_cnx, \
                 pg_cnx.cursor() as pg_cursor:
 
-            fetch_and_insert_elegiveis_cv(province, mysql_cursor, pg_cursor)
-            fetch_and_insert_carga_viral_alta(
-                province, mysql_cursor, pg_cursor)
-            fetch_and_insert_marcados_levantamento(
-                province, mysql_cursor, pg_cursor)
+            fetch_and_insert_elegiveis_cv(mysql_cursor, pg_cursor)
+            fetch_and_insert_carga_viral_alta(mysql_cursor, pg_cursor)
+            fetch_and_insert_marcados_levantamento(mysql_cursor, pg_cursor)
 
             pg_cnx.commit()
     except Exception as e:
@@ -188,6 +188,4 @@ def main(province: str):
 
 
 if __name__ == "__main__":
-    # Call the main function for each province
-    for province in ["Sofala", "Manica", "Niassa"]:
-        main(province)
+    main()
