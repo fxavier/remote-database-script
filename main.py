@@ -115,25 +115,29 @@ def fetch_and_insert_carga_viral_alta(province: str, mysql_cursor, pg_cursor):
                age, phone_number, created_at, sent))
 
 
-def fetch_and_insert_marcados_levantamento_2days(province: str,
-                                                 mysql_cursor, pg_cursor):
+def fetch_and_insert_marcados_levantamento(province: str, mysql_cursor, pg_cursor):
     """Fetch data from marcados_para_o_levantamento 
     and insert into PostgreSQL."""
 
-    next_appointment_date = date.today() + timedelta(days=4)
+    # Check if today is Friday (4 in weekday() since Monday is 0)
+    if date.today().weekday() == 4:
+        start_date = date.today() + timedelta(days=4)
+    else:
+        start_date = date.today() + timedelta(days=2)
+
+    end_date = date.today() + timedelta(days=7)
+
     query = "SELECT * FROM marcados_levantamento \
-        WHERE next_dispensing_date = %s"
-    mysql_cursor.execute(query, (next_appointment_date,))
+        WHERE next_dispensing_date >= %s AND next_dispensing_date <= %s"
+    mysql_cursor.execute(query, (start_date, end_date))
 
     # Fetch all rows
     rows = mysql_cursor.fetchall()
 
     # Insert fetched data into PostgreSQL
     for row in rows:
-        province = province
         district = row[4]
         health_facility = row[1]
-        # patient_id = row[0]
         patient_identifier = row[10]
         patient_name = row[9]
         gender = row[11]
@@ -166,66 +170,22 @@ def fetch_and_insert_marcados_levantamento_2days(province: str,
                pregnant, breastfeeding, tb, created_at, sent))
 
 
-def fetch_and_insert_marcados_levantamento_7days(province: str,
-                                                 mysql_cursor, pg_cursor):
-    """Fetch data from marcados_para_o_levantamento 
-    and insert into PostgreSQL."""
-
-    next_appointment_date = date.today() + timedelta(days=9)
-    query = "SELECT * FROM marcados_levantamento \
-        WHERE next_dispensing_date = %s"
-    mysql_cursor.execute(query, (next_appointment_date,))
-
-    # Fetch all rows
-    rows = mysql_cursor.fetchall()
-
-    # Insert fetched data into PostgreSQL
-    for row in rows:
-        province = province
-        district = row[4]
-        health_facility = row[1]
-        # patient_id = row[0]
-        patient_identifier = row[10]
-        patient_name = row[9]
-        gender = row[11]
-        age = row[12]
-        phone_number = row[13]
-        appointment_date = datetime.strptime(
-            str(row[2]), '%Y-%m-%d %H:%M:%S')
-        next_appointment_date = datetime.strptime(
-            str(row[3]), '%Y-%m-%d %H:%M:%S')
-        community = row[7]
-        pregnant = row[15]
-        breastfeeding = row[16]
-        tb = row[17]
-        created_at = date.today()
-        sent = False
-
-        pg_cursor.execute(sql.SQL("""
-            INSERT INTO core_visit (
-                province, district, health_facility,
-                patient_name, patient_identifier,
-                age, phone_number, appointment_date,
-                next_appointment_date, gender, community,
-                pregnant, breastfeeding, tb, created_at, sent
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """), (province, district, health_facility,
-               patient_name, patient_identifier,
-               age, phone_number, appointment_date,
-               next_appointment_date, gender, community,
-               pregnant, breastfeeding, tb, created_at, sent))
-
-
-def fetch_and_insert_marcados_seguimento2d(province: str,
-                                           mysql_cursor, pg_cursor):
+def fetch_and_insert_marcados_seguimento(province: str,
+                                         mysql_cursor, pg_cursor):
     """Fetch data from marcados_para_a consulta
     and insert into PostgreSQL."""
 
-    next_appointment_date = date.today() + timedelta(days=4)
+    # Check if today is Friday (4 in weekday() since Monday is 0)
+    if date.today().weekday() == 4:
+        start_date = date.today() + timedelta(days=4)
+    else:
+        start_date = date.today() + timedelta(days=2)
+
+    end_date = date.today() + timedelta(days=7)
+
     query = "SELECT * FROM marcados_seguimento \
-        WHERE next_appointment_date = %s"
-    mysql_cursor.execute(query, (next_appointment_date,))
+        WHERE next_appointment_date >= %s AND next_appointment_date <= %s"
+    mysql_cursor.execute(query, (start_date, end_date))
 
     # Fetch all rows
     rows = mysql_cursor.fetchall()
@@ -268,55 +228,55 @@ def fetch_and_insert_marcados_seguimento2d(province: str,
                pregnant, breastfeeding, tb, created_at, sent))
 
 
-def fetch_and_insert_marcados_seguimento7d(province: str,
-                                           mysql_cursor, pg_cursor):
-    """Fetch data from marcados_para_a consulta
-    and insert into PostgreSQL."""
+# def fetch_and_insert_marcados_seguimento7d(province: str,
+#                                            mysql_cursor, pg_cursor):
+#     """Fetch data from marcados_para_a consulta
+#     and insert into PostgreSQL."""
 
-    next_appointment_date = date.today() + timedelta(days=9)
-    query = "SELECT * FROM marcados_seguimento \
-        WHERE next_appointment_date = %s"
-    mysql_cursor.execute(query, (next_appointment_date,))
+#     next_appointment_date = date.today() + timedelta(days=9)
+#     query = "SELECT * FROM marcados_seguimento \
+#         WHERE next_appointment_date = %s"
+#     mysql_cursor.execute(query, (next_appointment_date,))
 
-    # Fetch all rows
-    rows = mysql_cursor.fetchall()
+#     # Fetch all rows
+#     rows = mysql_cursor.fetchall()
 
-    # Insert fetched data into PostgreSQL
-    for row in rows:
-        province = province
-        district = row[4]
-        health_facility = row[1]
-        # patient_id = row[0]
-        patient_identifier = row[10]
-        patient_name = row[9]
-        gender = row[11]
-        age = row[12]
-        phone_number = row[13]
-        appointment_date = datetime.strptime(
-            str(row[2]), '%Y-%m-%d %H:%M:%S')
-        next_appointment_date = datetime.strptime(
-            str(row[3]), '%Y-%m-%d %H:%M:%S')
-        community = row[7]
-        pregnant = row[15]
-        breastfeeding = row[16]
-        tb = row[17]
-        created_at = date.today()
-        sent = False
+#     # Insert fetched data into PostgreSQL
+#     for row in rows:
+#         province = province
+#         district = row[4]
+#         health_facility = row[1]
+#         # patient_id = row[0]
+#         patient_identifier = row[10]
+#         patient_name = row[9]
+#         gender = row[11]
+#         age = row[12]
+#         phone_number = row[13]
+#         appointment_date = datetime.strptime(
+#             str(row[2]), '%Y-%m-%d %H:%M:%S')
+#         next_appointment_date = datetime.strptime(
+#             str(row[3]), '%Y-%m-%d %H:%M:%S')
+#         community = row[7]
+#         pregnant = row[15]
+#         breastfeeding = row[16]
+#         tb = row[17]
+#         created_at = date.today()
+#         sent = False
 
-        pg_cursor.execute(sql.SQL("""
-            INSERT INTO core_visit (
-                province, district, health_facility,
-                patient_name, patient_identifier,
-                age, phone_number, appointment_date,
-                next_appointment_date, gender, community,
-                pregnant, breastfeeding, tb, created_at, sent
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """), (province, district, health_facility,
-               patient_name, patient_identifier,
-               age, phone_number, appointment_date,
-               next_appointment_date, gender, community,
-               pregnant, breastfeeding, tb, created_at, sent))
+#         pg_cursor.execute(sql.SQL("""
+#             INSERT INTO core_visit (
+#                 province, district, health_facility,
+#                 patient_name, patient_identifier,
+#                 age, phone_number, appointment_date,
+#                 next_appointment_date, gender, community,
+#                 pregnant, breastfeeding, tb, created_at, sent
+#             )
+#             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+#         """), (province, district, health_facility,
+#                patient_name, patient_identifier,
+#                age, phone_number, appointment_date,
+#                next_appointment_date, gender, community,
+#                pregnant, breastfeeding, tb, created_at, sent))
 
 
 def main(province: str):
@@ -332,16 +292,9 @@ def main(province: str):
             fetch_and_insert_elegiveis_cv(province, mysql_cursor, pg_cursor)
             fetch_and_insert_carga_viral_alta(
                 province, mysql_cursor, pg_cursor)
-            fetch_and_insert_marcados_levantamento_2days(
+            fetch_and_insert_marcados_levantamento(
                 province, mysql_cursor, pg_cursor)
-
-            fetch_and_insert_marcados_levantamento_7days(
-                province, mysql_cursor, pg_cursor)
-
-            fetch_and_insert_marcados_seguimento2d(
-                province, mysql_cursor, pg_cursor)
-
-            fetch_and_insert_marcados_seguimento7d(
+            fetch_and_insert_marcados_seguimento(
                 province, mysql_cursor, pg_cursor)
 
             pg_cnx.commit()
