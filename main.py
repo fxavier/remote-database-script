@@ -64,7 +64,7 @@ def fetch_and_insert_elegiveis_cv(province: str, mysql_cursor, pg_cursor):
         patient_identifier = row[3]
         patient_name = row[5]
         age = row[7]
-        phone_number = row[8]
+        phone_number = row[8] if row[8] is not None else row[9]
         community = row[12]
         created_at = date.today()
         sent = False
@@ -99,7 +99,7 @@ def fetch_and_insert_carga_viral_alta(province: str, mysql_cursor, pg_cursor):
         patient_name = row[4]
         # gender = row[5]
         age = row[6]
-        phone_number = row[19]
+        phone_number = row[19] if row[19] is not None else row[20]
         created_at = date.today()
         sent = False
 
@@ -120,16 +120,17 @@ def fetch_and_insert_marcados_levantamento(province: str, mysql_cursor, pg_curso
     and insert into PostgreSQL."""
 
     # Check if today is Friday (4 in weekday() since Monday is 0)
-    if date.today().weekday() == 4:
-        start_date = date.today() + timedelta(days=4)
-    else:
-        start_date = date.today() + timedelta(days=2)
+    # if date.today().weekday() == 4:
+    #     start_date = date.today() + timedelta(days=4)
+    # else:
+    #     start_date = date.today() + timedelta(days=2)
 
-    end_date = date.today() + timedelta(days=7)
+    # end_date = date.today() + timedelta(days=14)
 
-    query = "SELECT * FROM marcados_levantamento \
-        WHERE next_dispensing_date >= %s AND next_dispensing_date <= %s"
-    mysql_cursor.execute(query, (start_date, end_date))
+    query = "SELECT * FROM marcados_levantamento"  # \
+    #    WHERE next_dispensing_date >= %s AND next_dispensing_date <= %s"
+    # mysql_cursor.execute(query, (start_date, end_date))
+    mysql_cursor.execute(query)
 
     # Fetch all rows
     rows = mysql_cursor.fetchall()
@@ -142,7 +143,9 @@ def fetch_and_insert_marcados_levantamento(province: str, mysql_cursor, pg_curso
         patient_name = row[9]
         gender = row[11]
         age = row[12]
-        phone_number = row[13]
+        # phone_number = row[13]
+        # Check if row[13] is None and assign phone_number accordingly
+        phone_number = row[13] if row[13] is not None else row[14]
         appointment_date = datetime.strptime(
             str(row[2]), '%Y-%m-%d %H:%M:%S')
         next_appointment_date = datetime.strptime(
@@ -176,16 +179,17 @@ def fetch_and_insert_marcados_seguimento(province: str,
     and insert into PostgreSQL."""
 
     # Check if today is Friday (4 in weekday() since Monday is 0)
-    if date.today().weekday() == 4:
-        start_date = date.today() + timedelta(days=4)
-    else:
-        start_date = date.today() + timedelta(days=2)
+    # if date.today().weekday() == 4:
+    #     start_date = date.today() + timedelta(days=4)
+    # else:
+    #     start_date = date.today() + timedelta(days=2)
 
-    end_date = date.today() + timedelta(days=7)
+    # end_date = date.today() + timedelta(days=7)
 
-    query = "SELECT * FROM marcados_seguimento \
-        WHERE next_appointment_date >= %s AND next_appointment_date <= %s"
-    mysql_cursor.execute(query, (start_date, end_date))
+    query = "SELECT * FROM marcados_seguimento"  # \
+    #    WHERE next_appointment_date >= %s AND next_appointment_date <= %s"
+    # mysql_cursor.execute(query, (start_date, end_date))
+    mysql_cursor.execute(query)
 
     # Fetch all rows
     rows = mysql_cursor.fetchall()
@@ -200,7 +204,9 @@ def fetch_and_insert_marcados_seguimento(province: str,
         patient_name = row[9]
         gender = row[11]
         age = row[12]
-        phone_number = row[13]
+        # phone_number = row[13]
+        # Check if row[13] is None and assign phone_number accordingly
+        phone_number = row[13] if row[13] is not None else row[14]
         appointment_date = datetime.strptime(
             str(row[2]), '%Y-%m-%d %H:%M:%S')
         next_appointment_date = datetime.strptime(
@@ -304,6 +310,6 @@ def main(province: str):
 
 if __name__ == "__main__":
     # Call the main function for each province
-    provinces = ["Sofala", "Manica", "Niassa"]
+    provinces = ["Sofala", "Manica", "Niassa", "Tete"]
     for province in provinces:
         main(province)
