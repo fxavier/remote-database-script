@@ -146,9 +146,9 @@ def fetch_and_insert_marcados_levantamento(province: str, mysql_cursor, pg_curso
         # phone_number = row[13]
         # Check if row[13] is None and assign phone_number accordingly
         phone_number = row[13] if row[13] is not None else row[14]
-        appointment_date = datetime.strptime(
+        last_appointment_date = datetime.strptime(
             str(row[2]), '%Y-%m-%d %H:%M:%S')
-        next_appointment_date = datetime.strptime(
+        appointment_date = datetime.strptime(
             str(row[3]), '%Y-%m-%d %H:%M:%S')
         community = row[7]
         pregnant = row[15]
@@ -161,15 +161,15 @@ def fetch_and_insert_marcados_levantamento(province: str, mysql_cursor, pg_curso
             INSERT INTO core_visit (
                 province, district, health_facility,
                 patient_name, patient_identifier,
-                age, phone_number, appointment_date,
-                next_appointment_date, gender, community,
+                age, phone_number, last_appointment_date,
+                appointment_date, gender, community,
                 pregnant, breastfeeding, tb, created_at, sent
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, health_facility,
                patient_name, patient_identifier,
-               age, phone_number, appointment_date,
-               next_appointment_date, gender, community,
+               age, phone_number, last_appointment_date,
+               appointment_date, gender, community,
                pregnant, breastfeeding, tb, created_at, sent))
 
 
@@ -207,9 +207,9 @@ def fetch_and_insert_marcados_seguimento(province: str,
         # phone_number = row[13]
         # Check if row[13] is None and assign phone_number accordingly
         phone_number = row[13] if row[13] is not None else row[14]
-        appointment_date = datetime.strptime(
+        last_appointment_date = datetime.strptime(
             str(row[2]), '%Y-%m-%d %H:%M:%S')
-        next_appointment_date = datetime.strptime(
+        appointment_date = datetime.strptime(
             str(row[3]), '%Y-%m-%d %H:%M:%S')
         community = row[7]
         pregnant = row[15]
@@ -217,72 +217,58 @@ def fetch_and_insert_marcados_seguimento(province: str,
         tb = row[17]
         created_at = date.today()
         sent = False
-
         pg_cursor.execute(sql.SQL("""
             INSERT INTO core_visit (
                 province, district, health_facility,
                 patient_name, patient_identifier,
-                age, phone_number, appointment_date,
-                next_appointment_date, gender, community,
+                age, phone_number, last_appointment_date,
+                appointment_date, gender, community,
                 pregnant, breastfeeding, tb, created_at, sent
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """), (province, district, health_facility,
                patient_name, patient_identifier,
-               age, phone_number, appointment_date,
-               next_appointment_date, gender, community,
+               age, phone_number, last_appointment_date,
+               appointment_date, gender, community,
                pregnant, breastfeeding, tb, created_at, sent))
 
 
-# def fetch_and_insert_marcados_seguimento7d(province: str,
-#                                            mysql_cursor, pg_cursor):
-#     """Fetch data from marcados_para_a consulta
-#     and insert into PostgreSQL."""
+def fetch_and_insert_active_drugs_missed_appointment(province: str, mysql_cursor, pg_cursor):
+    """Fetch data from active_drugs_missed_appointment and insert into PostgreSQL."""
+    query = "SELECT * FROM ativos_levantamento_faltosos_consulta"
+    mysql_cursor.execute(query)
 
-#     next_appointment_date = date.today() + timedelta(days=9)
-#     query = "SELECT * FROM marcados_seguimento \
-#         WHERE next_appointment_date = %s"
-#     mysql_cursor.execute(query, (next_appointment_date,))
+    # Fetch all rows
+    rows = mysql_cursor.fetchall()
 
-#     # Fetch all rows
-#     rows = mysql_cursor.fetchall()
+    # Insert fetched data into PostgreSQL
+    for row in rows:
+        province = province
+        district = row[5]
+        health_facility = row[1]
+        patient_identifier = row[18]
+        patient_name = row[17]
+        appointment_date = datetime.strptime(
+            str(row[13]), '%Y-%m-%d %H:%M:%S')
+        phone_number = row[16] if row[16] is not None else row[15]
+        pregnant = 'ND'
+        gender = row[19]
+        age = row[20]
+        days_missed = row[14]   
+        
+        pg_cursor.execute(sql.SQL("""
+            INSERT INTO core_activeindrugmissedappointment (
+                province, district, health_facility,
+                patient_name, patient_identifier,
+                age, phone_number, appointment_date, 
+                gender, pregnant, days_missed
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """), (province, district, health_facility,
+               patient_name, patient_identifier,
+               age, phone_number, appointment_date,
+               gender, pregnant, days_missed))
 
-#     # Insert fetched data into PostgreSQL
-#     for row in rows:
-#         province = province
-#         district = row[4]
-#         health_facility = row[1]
-#         # patient_id = row[0]
-#         patient_identifier = row[10]
-#         patient_name = row[9]
-#         gender = row[11]
-#         age = row[12]
-#         phone_number = row[13]
-#         appointment_date = datetime.strptime(
-#             str(row[2]), '%Y-%m-%d %H:%M:%S')
-#         next_appointment_date = datetime.strptime(
-#             str(row[3]), '%Y-%m-%d %H:%M:%S')
-#         community = row[7]
-#         pregnant = row[15]
-#         breastfeeding = row[16]
-#         tb = row[17]
-#         created_at = date.today()
-#         sent = False
-
-#         pg_cursor.execute(sql.SQL("""
-#             INSERT INTO core_visit (
-#                 province, district, health_facility,
-#                 patient_name, patient_identifier,
-#                 age, phone_number, appointment_date,
-#                 next_appointment_date, gender, community,
-#                 pregnant, breastfeeding, tb, created_at, sent
-#             )
-#             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-#         """), (province, district, health_facility,
-#                patient_name, patient_identifier,
-#                age, phone_number, appointment_date,
-#                next_appointment_date, gender, community,
-#                pregnant, breastfeeding, tb, created_at, sent))
 
 
 def main(province: str):
@@ -294,7 +280,8 @@ def main(province: str):
                 mysql_cnx.cursor() as mysql_cursor, \
                 psycopg2.connect(**pg_config) as pg_cnx, \
                 pg_cnx.cursor() as pg_cursor:
-
+            
+            print(f"inserting data of province: {province} ............")
             fetch_and_insert_elegiveis_cv(province, mysql_cursor, pg_cursor)
             fetch_and_insert_carga_viral_alta(
                 province, mysql_cursor, pg_cursor)
@@ -302,7 +289,9 @@ def main(province: str):
                 province, mysql_cursor, pg_cursor)
             fetch_and_insert_marcados_seguimento(
                 province, mysql_cursor, pg_cursor)
-
+            fetch_and_insert_active_drugs_missed_appointment(
+                province, mysql_cursor, pg_cursor)
+          
             pg_cnx.commit()
     except Exception as e:
         print(f"An error occurred: {e}")
